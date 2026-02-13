@@ -4,64 +4,82 @@ from .lexer import Lexer
 from .token_stream import TokenStream
 
 def analisar_codigo(nome_arquivo, source_text):
+    """
+    Executa o Lexer para um conteúdo de texto específico.
+    """
     print(f"\n{'='*60}")
-    print(f"ARQUIVO: {nome_arquivo}")
+    print(f"PROCESSANDO: {nome_arquivo}")
     print(f"{'='*60}")
     
     lexer = Lexer(source_text)
     ts = TokenStream(lexer)
     
+    tokens_encontrados = 0
+    
     while True:
         try:
             t = ts.next()
             print(t)
+            tokens_encontrados += 1
             if t.tipo == "EOF":
                 break
         except Exception as e:
-            # Captura erros não tratados pelo modo pânico do lexer
-            print(f"ERRO FATAL NO SISTEMA: {e}")
+            # Captura erros graves que escaparam do modo pânico
+            print(f"ERRO FATAL: {e}")
             break
+            
     print(f"{'-'*60}")
+    print(f"Análise finalizada para '{nome_arquivo}'.")
 
-def carregar_e_processar(caminho):
-    # Resolve o caminho para absoluto (funciona Linux, Mac, Windows)
-    caminho_absoluto = os.path.abspath(caminho)
+def carregar_arquivo(caminho_usuario):
+    """
+    Tenta localizar e ler o arquivo, resolvendo caminhos relativos e absolutos.
+    """
+    # Transforma o caminho passado (ex: "../teste.kt" ou "C:/Users/...") em absoluto
+    caminho_absoluto = os.path.abspath(caminho_usuario)
     
     if not os.path.exists(caminho_absoluto):
-        print(f"\nERRO: O arquivo '{caminho}' não foi encontrado.")
-        print(f"   Procurado em: {caminho_absoluto}")
+        print(f"\nERRO: O arquivo '{caminho_usuario}' não foi encontrado.")
+        print(f"   Caminho buscado: {caminho_absoluto}")
         return
 
     try:
         with open(caminho_absoluto, 'r', encoding='utf-8') as f:
-            codigo = f.read()
-        
-        analisar_codigo(caminho, codigo)
+            codigo_fonte = f.read()
+            analisar_codigo(caminho_usuario, codigo_fonte)
     except Exception as e:
-        print(f"Erro ao ler o arquivo {caminho}: {e}")
+        print(f"Erro ao ler o arquivo: {e}")
 
-def main():
-    # sys.argv[0] é o nome do script. Os argumentos começam do [1:]
-    arquivos = sys.argv[1:]
-
-    # Cenário 1: Nenhum argumento passado
-    if not arquivos:
-        # Tenta achar o 'teste.kt' padrão na mesma pasta deste script (LexerProject)
-        diretorio_script = os.path.dirname(os.path.abspath(__file__))
-        arquivo_padrao = os.path.join(diretorio_script, "teste.kt")
-        
-        if os.path.exists(arquivo_padrao):
-            print("Nenhum arquivo informado via linha de comando.")
-            print(f"Executando arquivo de teste padrão: {arquivo_padrao}")
-            carregar_e_processar(arquivo_padrao)
-        else:
-            print("Uso: python -m LexerProject.main <arquivo1.kt> [arquivo2.kt ...]")
-            print("Exemplo: python -m LexerProject.main /home/user/meu_codigo.kt")
-        return
-
-    # Cenário 2: Argumentos passados (1 ou mais arquivos)
-    for arquivo in arquivos:
-        carregar_e_processar(arquivo)
+def exibir_ajuda():
+    """
+    Mostra como usar o programa caso nenhum argumento seja passado.
+    """
+    print("\nERRO: Nenhum arquivo de entrada foi especificado.")
+    print("-" * 50)
+    print("MODO DE USO:")
+    print("   python -m LexerProject.main <arquivo1.kt> [arquivo2.kt ...]")
+    print("\nEXEMPLOS:")
+    print("   1. Rodar um arquivo na mesma pasta:")
+    print("      python -m LexerProject.main teste.kt")
+    print("\n   2. Rodar múltiplos arquivos:")
+    print("      python -m LexerProject.main teste.kt outro.kt")
+    print("\n   3. Rodar arquivo em outro diretório (Caminho Absoluto):")
+    # Exemplo adaptativo para Windows ou Linux
+    if os.name == 'nt': # Windows
+        print(r"      python -m LexerProject.main C:\Users\user\Downloads\teste.kt")
+    else: # Linux/Mac
+        print("      python -m LexerProject.main /home/user/Downloads/teste.kt")
+    print("-" * 50)
 
 if __name__ == "__main__":
-    main()
+    # sys.argv[0] é o nome do script.
+    # sys.argv[1:] são os argumentos passados pelo usuário.
+    arquivos = sys.argv[1:]
+
+    if not arquivos:
+        exibir_ajuda()
+        sys.exit(1) # Sai do programa indicando erro
+
+    # Itera sobre todos os arquivos passados no comando
+    for arquivo in arquivos:
+        carregar_arquivo(arquivo)

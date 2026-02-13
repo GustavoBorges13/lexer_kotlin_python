@@ -1,11 +1,12 @@
-# Usa uma imagem leve do Python
 FROM python:3.9-slim
 
-# Define o diretório de trabalho dentro do container
 WORKDIR /app
 
-# Copia todo o conteúdo da pasta atual para o container
+# Copia tudo (incluindo a pasta exemplos e LexerProject)
 COPY . /app
 
-# Executa o analisador apontando para o pacote correto
-CMD ["python", "-m", "LexerProject.main"]
+# ENTRYPOINT define o executável fixo
+ENTRYPOINT ["python", "-m", "LexerProject.main"]
+
+# CMD define os argumentos padrão (caso você não passe nada)
+CMD []

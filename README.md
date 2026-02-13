@@ -1,17 +1,20 @@
 # Analisador Léxico - Kotlin
 
-Trabalho: Projeto e desenvolvimento de analisadores léxicos e sintáticos para a linguagem de programação Kotlin (Parte 3)
+**Trabalho:** Projeto e desenvolvimento de analisadores léxicos e sintáticos para a linguagem de programação Kotlin (Parte 3)  
+**Disciplina:** Compiladores  
+**Alunos:**
+*   Gustavo Silva
+*   Matheus Araujo
+*   Ricardo Primo
 
-Disciplina: Compiladores
+---
 
-Alunos:
-* Gustavo Silva
-* Matheus Araujo
-* Ricardo Primo
+## Pré-requisitos
 
-## Pré- requisitos
-* Python 3.8+
-* Docker (Opcional para execução em container)
+*   **Python 3.8+**
+*   **Docker** (Opcional, para execução em container)
+
+---
 
 ## Como Rodar o Código (Manualmente)
 
@@ -20,87 +23,113 @@ Alunos:
     git clone https://github.com/thiprer497/lexer_kotlin_python.git
     ```
 
-2.  **Acesse a pasta raiz:** 
-    É fundamental estar na pasta raiz do projeto (`lexer_kotlin_python`) e não dentro da pasta do pacote (`LexerProject`).
+2.  **Acesse a pasta raiz:**
+    É fundamental estar na pasta raiz do projeto (`lexer_kotlin_python`) e **não** dentro da pasta do pacote (`LexerProject`).
     ```bash
     cd lexer_kotlin_python
     ```
 
-3.  **Execute o módulo:**
-    Utilize a flag `-m` para executar o pacote como um script. Isso garante que as importações relativas funcionem corretamente.
+3.  **Execute o analisador:**
+    O arquivo `main.py` agora funciona como uma ferramenta de linha de comando (CLI). Você deve passar o caminho do(s) arquivo(s) `.kt` que deseja analisar.
 
-    **Linux / Mac:**
+    **Sintaxe Básica:**
     ```bash
-    python3 -m LexerProject.main  
+    # Linux / Mac
+    python3 -m LexerProject.main <caminho_do_arquivo>
+
+    # Windows
+    python -m LexerProject.main <caminho_do_arquivo>
     ```
 
-    **Windows:**
-    ```bash
-    python -m LexerProject.main 
-    ```
-    > **Nota:** O ponto de entrada (Main) está no arquivo `main.py`. Ao executar, ele processará o código de exemplo (`sample`) contido no final do arquivo e exibirá os tokens no terminal.
+    **Exemplos de uso:**
+
+    *   **Para ver a ajuda:** (Rode sem argumentos)
+        ```bash
+        python3 -m LexerProject.main
+        ```
+    *   **Para rodar o exemplo padrão:**
+        ```bash
+        python3 -m LexerProject.main exemplos/exemplo.kt
+        ```
+    *   **Para rodar múltiplos arquivos de uma vez:**
+        ```bash
+        python3 -m LexerProject.main exemplos/teste.kt exemplos/complexo.kt exemplos/erros.kt exemplos/estruturas.kt
+        ```
+
+---
 
 ## Como Rodar o Código (Via Docker)
 
-Se preferir rodar em um ambiente isolado, siga os passos abaixo.
+O Docker foi configurado para aceitar arquivos do seu computador através de volumes.
 
-### 1. Criar o Dockerfile
-Certifique-se de que existe um arquivo chamado `Dockerfile` na raiz do projeto (`lexer_kotlin_python`) com o seguinte conteúdo:
+### 1. Configurar o Dockerfile
+Certifique-se de que o arquivo `Dockerfile` na raiz tenha o seguinte conteúdo (usando `ENTRYPOINT`):
 
 ```dockerfile
-# Usa uma imagem leve do Python
 FROM python:3.9-slim
 
-# Define o diretório de trabalho dentro do container
 WORKDIR /app
 
-# Copia todo o conteúdo da pasta atual para o container
+# Copia todo o projeto para dentro do container
 COPY . /app
 
-# Executa o analisador apontando para o pacote correto
-CMD ["python", "-m", "LexerProject.main"]
+# Define o ponto de entrada para o módulo Python
+ENTRYPOINT ["python", "-m", "LexerProject.main"]
+
+# Argumentos padrão (vazio)
+CMD []
 ```
 
 ### 2. Construir a Imagem
-No terminal, na raiz do projeto, execute:
-
 ```bash
 docker build -t kotlin-lexer .
 ```
 
-### 3. Rodar o Container
-Após a construção, execute o container:
+### 3. Executar o Container
+Para analisar arquivos, você precisa "espelhar" (mount) a sua pasta atual para dentro do Docker.
 
-```bash
-docker run --rm kotlin-lexer
-```
+*   **Linux / Mac / PowerShell:**
+    ```bash
+    docker run --rm -v "$(pwd):/app" kotlin-lexer exemplos/exemplo.kt
+    ```
+
+*   **Windows (CMD clássico):**
+    ```bash
+    docker run --rm -v "%cd%:/app" kotlin-lexer exemplos/exemplo.kt
+    ```
+
+> **Explicação:** O comando `-v` permite que o Docker leia os arquivos da sua pasta `exemplos/` localmente.
 
 ---
 
-## Documentação dos Arquivos
+## Estrutura e Documentação
 
-Abaixo segue a descrição da responsabilidade de cada módulo do projeto:
+### Organização de Pastas
+*   **`LexerProject/`**: Contém todo o código fonte Python do analisador.
+*   **`exemplos/`**: Contém arquivos `.kt` para teste (ex: `exemplo.kt`).
 
-*   **`constantes.py`**
-    *   Contém a "base de dados" da gramática léxica. Define os dicionários de mapeamento para Operadores (ex: `+` -> `OP_PLUS`), Símbolos (ex: `(` -> `LPAREN`) e as listas de Palavras-Chave (*Keywords*) classificadas em Rígidas (Hard), Suaves (Soft) e Modificadoras, conforme a especificação oficial do Kotlin.
-
-*   **`tokens.py`**
-    *   Define a estrutura de dados `Token` (uma *dataclass*). É o objeto que representa a unidade mínima de significado, armazenando o tipo do token, o lexema (texto original), a linha e a coluna onde foi encontrado.
-
-*   **`erros.py`**
-    *   Define as classes de exceção personalizadas para erros léxicos, como `UnclosedComment` (comentário não fechado), `UnclosedString` (string não fechada) e `InvalidCharLiteral`, permitindo um tratamento de erros mais granular e mensagens precisas.
-
-*   **`utils.py`**
-    *   Conjunto de funções auxiliares e predicados para verificação de caracteres, como `eh_hex` (verifica hexadecimal), `eh_bin` (binário), e verificadores de sufixos numéricos (`L`, `f`, `u`). Ajuda a manter o código do Lexer limpo e legível.
-
-*   **`lexer.py`**
-    *   O coração do analisador léxico. Contém a classe `Lexer`, que percorre o código-fonte caractere por caractere. Implementa a máquina de estados que decide, com base no caractere atual, qual método de reconhecimento acionar (números, strings, identificadores, comentários ou operadores). Gerencia a contagem de linhas e colunas.
-
-*   **`token_stream.py`**
-    *   Uma abstração acima do Lexer. Recebe a lista de tokens gerada e fornece métodos para o futuro Analisador Sintático (Parser) consumir esses tokens sequencialmente, como `next()` (consome), `peek()` (espia o próximo sem consumir) e `expect()` (valida se o próximo token é do tipo esperado).
+### Descrição dos Módulos
 
 *   **`main.py`**
-    *   Arquivo principal de execução. Contém uma string de código Kotlin de teste (cobrindo casos de borda como Shebang, comentários aninhados e literais complexos) e aciona o Lexer, imprimindo a sequência de tokens encontrados no console.
+    *   **CLI (Command Line Interface):** Ponto de entrada do programa. Gerencia argumentos de linha de comando, leitura de arquivos e exibe mensagens de ajuda. Itera sobre os arquivos fornecidos e invoca o Lexer.
 
-*   **`__init__.py`**
-    *   Arquivo que transforma o diretório `LexerProject` em um pacote Python, exportando as classes principais (`Lexer`, `Token`, `TokenStream`) para facilitar a importação.
+*   **`lexer.py`**
+    *   **Motor do Analisador:** Percorre o código-fonte caractere por caractere.
+    *   Implementa o **Modo Pânico** (recuperação de erros sem abortar a execução).
+    *   Realiza conversão de **Valores** (ex: converte string "0xFF" para inteiro `255`).
+    *   Suporta *Strings* multilinha (`"""`), interpolação e escapes Unicode.
+
+*   **`tokens.py`**
+    *   Define a dataclass `Token` com os campos: `tipo`, `lexema`, `valor` (novo!), `linha` e `coluna`.
+
+*   **`constantes.py`**
+    *   "Banco de dados" léxico. Contém dicionários de Operadores, Símbolos e as listas de Palavras-Chave (Hard, Soft e Modifier Keywords) conforme a especificação oficial do Kotlin.
+
+*   **`erros.py`**
+    *   Define exceções personalizadas para controle interno, embora o Lexer priorize o tratamento via Modo Pânico na saída padrão.
+
+*   **`utils.py`**
+    *   Funções auxiliares para validação de caracteres (hexadecimal, binário) e separadores.
+
+*   **`token_stream.py`**
+    *   Abstração para consumo de tokens (buffer), preparando o terreno para a futura implementação do Analisador Sintático (Parser).
