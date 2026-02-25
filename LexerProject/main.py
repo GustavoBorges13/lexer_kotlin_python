@@ -1,33 +1,45 @@
+# main.py
 import sys
 import os
 from .lexer import Lexer
 from .token_stream import TokenStream
+from .parser_kotlin import Parser
 
 def analisar_codigo(nome_arquivo, source_text):
     """
-    Executa o Lexer para um conteúdo de texto específico.
+    Executa o Lexer (imprime tokens) e em seguida executa o Parser (imprime AST / erros).
     """
     print(f"\n{'='*60}")
     print(f"PROCESSANDO: {nome_arquivo}")
     print(f"{'='*60}")
     
-    lexer = Lexer(source_text)
-    ts = TokenStream(lexer)
+    # --- Passo 1: lexar e mostrar tokens (sem consumir o input permanentemente) ---
+    lexer_for_print = Lexer(source_text)
+    tokens = lexer_for_print.tokenize()
+    for t in tokens:
+        print(t)
+    print("\n\n\nanalise lexica finalizada\n\n\n")
     
-    tokens_encontrados = 0
+    # --- Passo 2: parsear (usamos um novo lexer/tokenstream para começar do início) ---
+    lexer_for_parse = Lexer(source_text)
+    ts = TokenStream(lexer_for_parse)
+    parser = Parser(ts)
+    ast = parser.parse()
     
-    while True:
-        try:
-            t = ts.next()
-            print(t)
-            tokens_encontrados += 1
-            if t.tipo == "EOF":
-                break
-        except Exception as e:
-            # Captura erros graves que escaparam do modo pânico
-            print(f"ERRO FATAL: {e}")
-            break
-            
+    print(f"{'-'*60}")
+    print("AST (sumário):")
+    # imprimir de forma resumida (evita dumps gigantes)
+    import json
+    print(json.dumps(ast, indent=2, ensure_ascii=False))
+    if parser.errors:
+        print(f"{'-'*60}")
+        print("Erros sintáticos encontrados:")
+        for e in parser.errors:
+            print(e)
+    else:
+        print(f"{'-'*60}")
+        print("Parsing finalizado sem erros sintáticos detectados.")
+    
     print(f"{'-'*60}")
     print(f"Análise finalizada para '{nome_arquivo}'.")
 
@@ -35,7 +47,6 @@ def carregar_arquivo(caminho_usuario):
     """
     Tenta localizar e ler o arquivo, resolvendo caminhos relativos e absolutos.
     """
-    # Transforma o caminho passado (ex: "../teste.kt" ou "C:/Users/...") em absoluto
     caminho_absoluto = os.path.abspath(caminho_usuario)
     
     if not os.path.exists(caminho_absoluto):
@@ -51,9 +62,6 @@ def carregar_arquivo(caminho_usuario):
         print(f"Erro ao ler o arquivo: {e}")
 
 def exibir_ajuda():
-    """
-    Mostra como usar o programa caso nenhum argumento seja passado.
-    """
     print("\nERRO: Nenhum arquivo de entrada foi especificado.")
     print("-" * 50)
     print("MODO DE USO:")
@@ -64,7 +72,6 @@ def exibir_ajuda():
     print("\n   2. Rodar múltiplos arquivos:")
     print("      python -m LexerProject.main teste.kt outro.kt")
     print("\n   3. Rodar arquivo em outro diretório (Caminho Absoluto):")
-    # Exemplo adaptativo para Windows ou Linux
     if os.name == 'nt': # Windows
         print(r"      python -m LexerProject.main C:\Users\user\Downloads\teste.kt")
     else: # Linux/Mac
@@ -72,14 +79,11 @@ def exibir_ajuda():
     print("-" * 50)
 
 if __name__ == "__main__":
-    # sys.argv[0] é o nome do script.
-    # sys.argv[1:] são os argumentos passados pelo usuário.
     arquivos = sys.argv[1:]
 
     if not arquivos:
         exibir_ajuda()
-        sys.exit(1) # Sai do programa indicando erro
+        sys.exit(1)
 
-    # Itera sobre todos os arquivos passados no comando
     for arquivo in arquivos:
         carregar_arquivo(arquivo)
