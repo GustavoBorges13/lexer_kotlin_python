@@ -119,7 +119,7 @@ Para analisar arquivos, você precisa "espelhar" (mount) a sua pasta atual para 
     *   **CLI (Command Line Interface):** Ponto de entrada do programa. Gerencia argumentos de linha de comando, leitura de arquivos e exibe mensagens de ajuda. Itera sobre os arquivos fornecidos e invoca o Lexer.
 
 *   **`lexer.py`**
-    *   **Motor do Analisador:** Percorre o código-fonte caractere por caractere.
+    *   **Motor do Analisador léxico:** Percorre o código-fonte caractere por caractere.
     *   Implementa o **Modo Pânico** (recuperação de erros sem abortar a execução).
     *   Realiza conversão de **Valores** (ex: converte string "0xFF" para inteiro `255`).
     *   Suporta *Strings* multilinha (`"""`), interpolação e escapes Unicode.
@@ -136,5 +136,8 @@ Para analisar arquivos, você precisa "espelhar" (mount) a sua pasta atual para 
 *   **`utils.py`**
     *   Funções auxiliares para validação de caracteres (hexadecimal, binário) e separadores.
 
-*   **`token_stream.py`**
+*   **`token_stream.py`**lexer and parser for kotlin language
     *   Abstração para consumo de tokens (buffer), preparando o terreno para a futura implementação do Analisador Sintático (Parser).
+
+*   **`parse_kotlin.py`**lexer and parser for kotlin language
+    *   O parser LL(1) consome os tokens do lexer, valida a estrutura sintática essencial da linguagem Kotlin e constrói uma AST hierárquica, com tratamento básico de erros e precedência correta de operadores.
